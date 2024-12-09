@@ -54,10 +54,10 @@ async def pipeline(input_file:list[str], user_request:str):
     text_splitter = RecursiveCharacterTextSplitter(
         separators=['\n\n'],
         )
-    # try:
-    #     text_splitter._chunk_size = int(Input_Analyser(user_request))
-    # except int(Input_Analyser(user_request)) :
-    text_splitter._chunk_size = 512
+    try:
+        text_splitter._chunk_size = int(Input_Analyser(user_request))
+    except int(Input_Analyser(user_request)) :
+        text_splitter._chunk_size = 512
         
     print("chunk size : ",text_splitter._chunk_size)
    
@@ -104,6 +104,7 @@ async def pipeline(input_file:list[str], user_request:str):
     )
     
     runnable = (
+        
         {
             "user_request":RunnablePassthrough(),
             "context":vectore_store.as_retriever(),
@@ -137,15 +138,18 @@ def Input_Analyser(user_request:str):
     
     
     slm = ChatOllama(
-        model="llama3.2",
+        model="llama3.2:1b",
         temperature=0,
     )
     
     template_slm_request = """
-    Analyze the given user request and determine the optimal chunk size (in number of words) 
+    Analyze the given user request and determine the optimal chunk size: enter the optimal chunk size for the given user request.\n\n
+    the chunk must be in a multiple of 2: 32,64,128,256,512,1024,2048,4096,8192,16384.
     to ensure good performance for Retrieval-Augmented Generation (RAG). 
     You must Provide only a single number as your answer, without any additional explanation or text.\n\n
+    You must provide a single number as your answer.\n\n
     User request: {user_request}
+    answer:
     """
     
     slm_request = PromptTemplate(
